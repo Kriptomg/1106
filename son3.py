@@ -3,6 +3,7 @@ import asyncio
 from telethon import TelegramClient
 from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
+from best_params import BEST_PARAMS
 import os
 import requests
 import numpy as np
@@ -1303,28 +1304,72 @@ async def main_loop():
         )
 
         # 2) Backtest sonuçlarını ve dinamik yorumu ekle
-        win_rate, total_signals = backtest_strategy(
-   	     ohlcv_1h,
-             tp_pct=0.02,
-             sl_pct=0.02,
-             min_adx=18,
-             min_rsi=52
+        # 15 dakika
+        params_15m = BEST_PARAMS["15m"]
+        win_rate_15m, total_signals_15m = backtest_strategy(
+            ohlcv_15m,
+            tp_pct=params_15m["tp"],
+            sl_pct=params_15m["sl"],
+            hold_bars=params_15m["hold"],
+            min_adx=params_15m["min_adx"],
+            min_rsi=params_15m["min_rsi"]
         )
 
+        # 30 dakika
+        params_30m = BEST_PARAMS["30m"]
+        win_rate_30m, total_signals_30m = backtest_strategy(
+            ohlcv_30m,
+            tp_pct=params_30m["tp"],
+            sl_pct=params_30m["sl"],
+            hold_bars=params_30m["hold"],
+            min_adx=params_30m["min_adx"],
+            min_rsi=params_30m["min_rsi"]
+        )
+
+        # 1 saat
+        params_1h = BEST_PARAMS["1h"]
+        win_rate_1h, total_signals_1h = backtest_strategy(
+            ohlcv_1h,
+            tp_pct=params_1h["tp"],
+            sl_pct=params_1h["sl"],
+            hold_bars=params_1h["hold"],
+            min_adx=params_1h["min_adx"],
+            min_rsi=params_1h["min_rsi"]
+        )
+
+        # 4 saat
+        params_4h = BEST_PARAMS["4h"]
+        win_rate_4h, total_signals_4h = backtest_strategy(
+            ohlcv_4h,
+            tp_pct=params_4h["tp"],
+            sl_pct=params_4h["sl"],
+            hold_bars=params_4h["hold"],
+            min_adx=params_4h["min_adx"],
+            min_rsi=params_4h["min_rsi"]
+        )
+
+        # 1 gün
+        params_1d = BEST_PARAMS["1d"]
+        win_rate_1d, total_signals_1d = backtest_strategy(
+            ohlcv_1d,
+            tp_pct=params_1d["tp"],
+            sl_pct=params_1d["sl"],
+            hold_bars=params_1d["hold"],
+            min_adx=params_1d["min_adx"],
+            min_rsi=params_1d["min_rsi"]
+        )
         dynamic_comment = generate_dynamic_comment(rsi_val, macd_val, obv_1h_pct)
 
-        msg = (
-            kisavadeli_analiz_bolumu
-            + rapor_1h
-            + "\n─────\n" + rapor_4h
-            + "\n─────\n" + rapor_1d
-            + "\n─────\n"
-            + nihai
-            + f"\n💡 Uzman Yorumu: {dynamic_comment}"
-            + f"\n🔍 Backtest Sonucu (Son {total_signals} Sinyal): %{win_rate:.1f} Başarı"
-            + whale_alert_raporu
-            + "\n\n" + btc_piyasa_analiz_turkce()
+        # Backtest sonuçlarını bir string olarak topla
+        backtest_results = (
+            f"\n\n━━ Backtest Sonuçları ━━"
+            f"\n15m: %{win_rate_15m:.2f} başarı, {total_signals_15m} sinyal | {params_15m}"
+            f"\n30m: %{win_rate_30m:.2f} başarı, {total_signals_30m} sinyal | {params_30m}"
+            f"\n1h: %{win_rate_1h:.2f} başarı, {total_signals_1h} sinyal | {params_1h}"
+            f"\n4h: %{win_rate_4h:.2f} başarı, {total_signals_4h} sinyal | {params_4h}"
+            f"\n1d: %{win_rate_1d:.2f} başarı, {total_signals_1d} sinyal | {params_1d}"
         )
+
 
         send_telegram_message_split(msg, max_len=4000)
         print(dtstr_tr, "--> Mesaj gönderildi.")
